@@ -1,7 +1,7 @@
 Bee Watch
 ========
 
-An open source project for debugging Go programs.
+Bee Watch is an interactive debugger for the Go programming language.
 
 ## License
 
