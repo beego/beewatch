@@ -70,3 +70,17 @@ func loadFile(path string) ([]byte, error) {
 	f.Read(b)
 	return b, nil
 }
+
+// levelToStr returns string format of debug level.
+func levelToStr(wl debugLevel) string {
+	switch wl {
+	case Trace:
+		return "TRACE"
+	case Info:
+		return "INFO"
+	case Critical:
+		return "CRITICAL"
+	default:
+		return "UNKNOWN"
+	}
+}

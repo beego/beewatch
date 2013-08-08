@@ -34,13 +34,35 @@ function onClose(evt) {
     //handleDisconnected();
 }
 
+function handleDisconnected() {
+    //connected = false;
+    //document.getElementById("resume").className = "buttonDisabled";
+    //document.getElementById("disconnect").className = "buttonDisabled";
+    //writeToScreen("Disconnected.", "label label-funky", "INFO", "");
+}
+
 function onMessage(evt) {
     try {
         var cmd = JSON.parse(evt.data);
     } catch (e) {
-        console.log('[hopwatch] failed to read valid JSON: ', message.data);
+        console.log('[ERRO] Failed to read valid JSON: ', e.message.data);
         return;
     }
+
+    switch (cmd.Action) {
+        case "DISPLAY":
+            writeToScreen(getTitle(cmd), "label label-info", "INFO", watchParametersToHtml(cmd.Parameters));
+            sendResume();
+            return;
+        case "DONE":
+            actionDisconnect();
+            return;
+    }
+}
+
+function getTitle(cmd) {
+    var i = cmd.Parameters["go.file"].lastIndexOf("/") + 1;
+    return cmd.Parameters["go.file"].substring(i, cmd.Parameters["go.file"].length) + ":" + cmd.Parameters["go.line"];
 }
 
 function onError(evt) {
@@ -51,7 +73,7 @@ function writeToScreen(title, cls, level, msg) {
     var logdiv = document.createElement("div");
     addTime(logdiv, cls, level);
     addTitle(logdiv, title);
-    addMessage(logdiv, msg);
+    addMessage(logdiv, msg, level);
     logdiv.scrollIntoView();
     output.appendChild(logdiv);
 }
@@ -73,17 +95,41 @@ function addTitle(logdiv, title) {
 }
 
 
-function addMessage(logdiv, msg) {
+function addMessage(logdiv, msg, level) {
     var txt = document.createElement("span");
-    var msgcls;
 
-    switch (msg.substr(1, 4)) {
-        case "INIT", "INFO":
-            txt.className = "text-success";
+    if (msg.substr(0, 1) == "[") {
+        // Debugger messages.
+        txt.className = getMsgClass(msg.substr(1, 4));
+    } else {
+        // App messages.
+        txt.className = getMsgClass(level);
     }
 
-    txt.innerHTML = " " + msg;
+    txt.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + msg;
     logdiv.appendChild(txt);
+}
+
+function getMsgClass(level) {
+    switch (level) {
+        case "INIT", "INFO":
+            return "text-success";
+    }
+}
+
+function watchParametersToHtml(parameters) {
+    var line = "";
+    var multiline = false;
+    for (var prop in parameters) {
+        if (prop.slice(0, 3) != "go.") {
+            if (multiline) {
+                line = line + ", ";
+            }
+            line = line + prop + "=" + parameters[prop];
+            multiline = true;
+        }
+    }
+    return line
 }
 
 function actionDisconnect() {
@@ -97,6 +143,10 @@ function actionDisconnect() {
 
 function sendConnected() {
     doSend('{"Action":"CONNECTED"}');
+}
+
+function sendResume() {
+    doSend('{"Action":"RESUME"}');
 }
 
 function sendQuit() {

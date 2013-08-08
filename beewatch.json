@@ -1,3 +1,4 @@
 {
-	"app_name": "Go Walker Server"
+	"app_name": "Go Walker Server",
+	"http_port": 23456
 }

@@ -35,11 +35,12 @@ var (
 )
 
 var App struct {
-	Name string `json:"app_name"`
+	Name     string `json:"app_name"`
+	HttpPort int    `json:"http_port"`
 }
 
 const (
-	APP_VER = "0.0.1.0808"
+	APP_VER = "0.0.2.0809"
 )
 
 // Start initialize debugger data.
@@ -53,14 +54,16 @@ func Start(wl debugLevel) {
 
 func loadJSON() {
 	f, err := os.Open("beewatch.json")
-	if err == nil {
-		defer f.Close()
+	if err != nil {
+		fmt.Printf("[ERRO] BW: Fail to load beewatch.json[ %s ]\n", err)
+		os.Exit(2)
+	}
+	defer f.Close()
 
-		d := json.NewDecoder(f)
-		err = d.Decode(&App)
-		if err != nil {
-			fmt.Printf("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
-			os.Exit(2)
-		}
+	d := json.NewDecoder(f)
+	err = d.Decode(&App)
+	if err != nil {
+		fmt.Printf("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
+		os.Exit(2)
 	}
 }

@@ -51,12 +51,21 @@ func initHTTP() {
 	data["AppVer"] = "v" + APP_VER
 	data["AppName"] = App.Name
 
+	go listen()
 	go sendLoop()
+}
 
-	err = http.ListenAndServe(":23456", nil)
+func listen() {
+	err := http.ListenAndServe(":"+fmt.Sprintf("%d", App.HttpPort), nil)
 	if err != nil {
 		fmt.Printf("[ERRO] BW: Server crashed[ %s ]\n", err)
 		os.Exit(2)
+	}
+}
+
+func Close() {
+	if beewatchEnabled {
+		channelExchangeCommands(Critical, command{Action: "DONE"})
 	}
 }
 
@@ -81,6 +90,7 @@ var (
 // command is used to transport message to and from the debugger.
 type command struct {
 	Action     string
+	Level      string
 	Parameters map[string]string
 }
 
@@ -105,7 +115,7 @@ func connectHandler(ws *websocket.Conn) {
 		fmt.Printf("[ERRO] BW: Fail to establish connection[ %s ]\n", err)
 	} else {
 		fmt.Printf("[INFO] BW: Connected to browser, ready to watch.\n")
-		//connectChannel <- cmd
+		connectChannel <- cmd
 		receiveLoop()
 	}
 }
@@ -120,12 +130,13 @@ func receiveLoop() {
 			break
 		}
 
+		fmt.Printf("[RECE] BW: %v.\n", cmd)
 		if "QUIT" == cmd.Action {
 			beewatchEnabled = false
 			fmt.Printf("[INFO] BW: Browser requests disconnect.\n")
 			currentWebsocket.Close()
 			currentWebsocket = nil
-			//fromBrowserChannel <- cmd
+			fromBrowserChannel <- cmd
 			fmt.Printf("[INFO] BW: Disconnected.\n")
 			break
 		} else {
@@ -159,5 +170,6 @@ func sendLoop() {
 			}
 		}
 		websocket.JSON.Send(currentWebsocket, &next)
+		fmt.Printf("[SENT] BW: %v.\n", next)
 	}
 }
