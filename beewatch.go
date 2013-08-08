@@ -24,14 +24,14 @@ import (
 type debugLevel int
 
 const (
-	_                = iota
 	Trace debugLevel = iota
 	Info
 	Critical
 )
 
 var (
-	watchLevel debugLevel
+	watchLevel      debugLevel
+	beewatchEnabled bool
 )
 
 var App struct {
@@ -44,9 +44,11 @@ const (
 
 // Start initialize debugger data.
 func Start(wl debugLevel) {
-	fmt.Printf("[INIT] Bee Watch v%s.\n", APP_VER)
+	fmt.Printf("[INIT] BW: Bee Watch v%s.\n", APP_VER)
 	loadJSON()
 	watchLevel = wl
+	beewatchEnabled = true
+	initHTTP()
 }
 
 func loadJSON() {
@@ -57,7 +59,8 @@ func loadJSON() {
 		d := json.NewDecoder(f)
 		err = d.Decode(&App)
 		if err != nil {
-			fmt.Printf("[ERRO] Fail to parse beewatch.json[ %s ]\n", err)
+			fmt.Printf("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
+			os.Exit(2)
 		}
 	}
 }

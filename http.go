@@ -13,3 +13,151 @@
 // under the License.
 
 package beewatch
+
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+	"os"
+	"strings"
+
+	"code.google.com/p/go.net/websocket"
+)
+
+var (
+	viewPath string
+	data     map[interface{}]interface{}
+)
+
+func initHTTP() {
+	// Static path.
+	sp, err := getStaticPath()
+	if err != nil {
+		fmt.Printf("[ERRO] BW: Fail to get static path[ %s ]\n", err)
+		os.Exit(2)
+	}
+
+	http.Handle("/static/", http.StripPrefix("/static/",
+		http.FileServer(http.Dir(sp))))
+	fmt.Printf("[INIT] BW: Static file server(%s)\n", sp)
+
+	// View path.
+	viewPath = strings.Replace(sp, "static", "views", 1)
+
+	http.HandleFunc("/", mainPage)
+	http.Handle("/beewatch", websocket.Handler(connectHandler))
+
+	data = make(map[interface{}]interface{})
+	data["AppVer"] = "v" + APP_VER
+	data["AppName"] = App.Name
+
+	go sendLoop()
+
+	err = http.ListenAndServe(":23456", nil)
+	if err != nil {
+		fmt.Printf("[ERRO] BW: Server crashed[ %s ]\n", err)
+		os.Exit(2)
+	}
+}
+
+func mainPage(w http.ResponseWriter, r *http.Request) {
+	b, err := loadFile(viewPath + "/home.html")
+	if err != nil {
+		fmt.Printf("[ERRO] BW: Fail to load template[ %s ]\n", err)
+		os.Exit(2)
+	}
+	t := template.New("home.html")
+	t.Parse(string(b))
+	t.Execute(w, data)
+}
+
+var (
+	currentWebsocket   *websocket.Conn
+	connectChannel     = make(chan command)
+	toBrowserChannel   = make(chan command)
+	fromBrowserChannel = make(chan command)
+)
+
+// command is used to transport message to and from the debugger.
+type command struct {
+	Action     string
+	Parameters map[string]string
+}
+
+// addParam adds a key,value string pair to the command ; no check on overwrites.
+func (c *command) addParam(key, value string) {
+	if c.Parameters == nil {
+		c.Parameters = map[string]string{}
+	}
+	c.Parameters[key] = value
+}
+
+func connectHandler(ws *websocket.Conn) {
+	if currentWebsocket != nil {
+		fmt.Printf("[INFO] BW: Connection has already been established, ignore.\n")
+		return
+	}
+
+	currentWebsocket = ws
+	var cmd command
+	if err := websocket.JSON.Receive(currentWebsocket, &cmd); err != nil {
+		currentWebsocket = nil
+		fmt.Printf("[ERRO] BW: Fail to establish connection[ %s ]\n", err)
+	} else {
+		fmt.Printf("[INFO] BW: Connected to browser, ready to watch.\n")
+		//connectChannel <- cmd
+		receiveLoop()
+	}
+}
+
+// receiveLoop reads commands from the websocket and puts them onto a channel.
+func receiveLoop() {
+	for {
+		var cmd command
+		if err := websocket.JSON.Receive(currentWebsocket, &cmd); err != nil {
+			fmt.Printf("[ERRO] BW: connectHandler.JSON.Receive failed[ %s ]\n", err)
+			fromBrowserChannel <- command{Action: "QUIT"}
+			break
+		}
+
+		if "QUIT" == cmd.Action {
+			beewatchEnabled = false
+			fmt.Printf("[INFO] BW: Browser requests disconnect.\n")
+			currentWebsocket.Close()
+			currentWebsocket = nil
+			//fromBrowserChannel <- cmd
+			fmt.Printf("[INFO] BW: Disconnected.\n")
+			break
+		} else {
+			fromBrowserChannel <- cmd
+		}
+	}
+}
+
+// sendLoop takes commands from a channel to send to the browser (debugger).
+// If no connection is available then wait for it.
+// If the command action is quit then abort the loop.
+func sendLoop() {
+	if currentWebsocket == nil {
+		fmt.Printf("[INFO] BW: No connection, wait for it.\n")
+		cmd := <-connectChannel
+		if "QUIT" == cmd.Action {
+			return
+		}
+	}
+
+	for {
+		next := <-toBrowserChannel
+		if "QUIT" == next.Action {
+			break
+		}
+		if currentWebsocket == nil {
+			fmt.Printf("[INFO] BW: No connection, wait for it.\n")
+			cmd := <-connectChannel
+			if "QUIT" == cmd.Action {
+				break
+			}
+		}
+		websocket.JSON.Send(currentWebsocket, &next)
+	}
+}

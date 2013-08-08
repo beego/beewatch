@@ -15,11 +15,58 @@
 package beewatch
 
 import (
+	"errors"
 	"os"
+	"runtime"
+	"strings"
+)
+
+const (
+	IMPORT_PATH = "github.com/beego/beewatch"
 )
 
 // isExist returns if a file or directory exists
 func isExist(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || os.IsExist(err)
+}
+
+// getStaticPath returns app static path in somewhere in $GOPATH,
+// it returns error if it cannot find.
+func getStaticPath() (string, error) {
+	gps := os.Getenv("GOPATH")
+
+	var sep string
+	if runtime.GOOS == "windows" {
+		sep = ";"
+	} else {
+		sep = ":"
+	}
+
+	for _, gp := range strings.Split(gps, sep) {
+		sp := gp + "/src/" + IMPORT_PATH + "/static"
+		if isExist(sp) {
+			return sp, nil
+		}
+	}
+
+	return "", errors.New("Cannot find static path in $GOPATH")
+}
+
+// loadFile loads file data by given path.
+func loadFile(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	b := make([]byte, fi.Size())
+	f.Read(b)
+	return b, nil
 }

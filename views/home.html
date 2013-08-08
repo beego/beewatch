@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+	<head>
+		<title>Bee Watch Debugger</title>
+		<meta charset="utf-8" />
+		<link href="/static/css/normalize.css" rel="stylesheet" type="text/css" >	
+		<link href="/static/css/furatto.css" rel="stylesheet" type="text/css" >	
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+		<script src="/static/js/beewatch.js" type="text/javascript"></script>
+	</head>
+
+	<body style="padding-top: 65px; font-family: Microsoft Yahei; font-size: 14px; background-color: rgb(242, 242, 242);">
+		<div class="navbar inverse-navbar navbar-fixed-top navbar-alpha" style="font-size: 16px;">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="brand" href="/">
+						Bee Watch
+						<sub class="version">{{.AppVer}}</sub>
+					</a>
+
+					<ul class="nav">
+						<li><a href="javascript:actionResume();">F8 - Resume</a></li>
+						<li><a href="javascript:actionPanel();">F9 - Panel</a></li>
+						<li><a href="javascript:actionDisconnect();">Disconnect</a></li>
+						<li><a target="_blank" href="http://gowalker.org/github.com/beego/beewatch">About</a></li>
+						<li style="font-size: 18px;"><a>App Name: <strong>{{.AppName}}</strong></a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div id="output" class="main-container">
+			<span class="label label-funky">20:42:14 INFO</span> beewatch.go: 47 <span class="text-success">[INIT] BW: Bee Watch v{{.AppVer}}.</span><br />
+			<span class="label label-info">20:43:10 INFO</span> 32r3r <a href="" class="label label-primary">View Source</a><br />
+			<span class="label">20:43:18 TRACE</span> 32r3r <br />
+			<span class="label label-danger">20:44:05 CRITICAL</span> 32r3r <br />
+		</div>
+
+		<div class="footer">
+			<div class="footer-wrapper">
+				<div class="container">
+					<div class="row-fluid">
+						<div class="span12">
+							<div class="span6">
+								<p class="copyright">Code licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank" class="link">Apache License v2.0</a></p>
+							</div>
+
+							<div class="span6">
+								<ul class="hrz-nav pull-right">
+									<li><a href="https://github.com/beego/beewatch" target="_blank">Github</a></li>
+								</ul>
+							</div>
+						</div>      
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

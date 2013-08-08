@@ -14,6 +14,10 @@
 
 package beewatch
 
-type WatchPoint struct {
-	watchLevel debugLevel
+import (
+	"testing"
+)
+
+func Test_BeeWatch(t *testing.T) {
+
 }
