@@ -40,7 +40,7 @@ var App struct {
 }
 
 const (
-	APP_VER = "0.0.2.0809"
+	APP_VER = "0.1.0.0809"
 )
 
 // Start initialize debugger data.
