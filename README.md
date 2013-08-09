@@ -35,7 +35,7 @@ You browser has to support WebSocket, it has been tested with Chrome, Safari and
 
 ## Credits
 
-- [hopwatch](github.com/emicklei/hopwatch)
+- [hopwatch](https://github.com/emicklei/hopwatch)
 
 ## API Documentation
 
