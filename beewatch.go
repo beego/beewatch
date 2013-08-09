@@ -17,7 +17,6 @@ package beewatch
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -45,7 +44,7 @@ const (
 
 // Start initialize debugger data.
 func Start(wl debugLevel) {
-	fmt.Printf("[INIT] BW: Bee Watch v%s.\n", APP_VER)
+	colorLog("[INIT] BW: Bee Watch v%s.\n", APP_VER)
 	loadJSON()
 	watchLevel = wl
 	beewatchEnabled = true
@@ -55,7 +54,7 @@ func Start(wl debugLevel) {
 func loadJSON() {
 	f, err := os.Open("beewatch.json")
 	if err != nil {
-		fmt.Printf("[ERRO] BW: Fail to load beewatch.json[ %s ]\n", err)
+		colorLog("[ERRO] BW: Fail to load beewatch.json[ %s ]\n", err)
 		os.Exit(2)
 	}
 	defer f.Close()
@@ -63,7 +62,7 @@ func loadJSON() {
 	d := json.NewDecoder(f)
 	err = d.Decode(&App)
 	if err != nil {
-		fmt.Printf("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
+		colorLog("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
 		os.Exit(2)
 	}
 }

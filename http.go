@@ -33,13 +33,14 @@ func initHTTP() {
 	// Static path.
 	sp, err := getStaticPath()
 	if err != nil {
-		fmt.Printf("[ERRO] BW: Fail to get static path[ %s ]\n", err)
+		colorLog("[ERRO] BW: Fail to get static path[ %s ]\n", err)
 		os.Exit(2)
 	}
 
 	http.Handle("/static/", http.StripPrefix("/static/",
 		http.FileServer(http.Dir(sp))))
-	fmt.Printf("[INIT] BW: Static file server(%s)\n", sp)
+	colorLog("[INIT] BW: File server(%s)\n",
+		sp[:strings.LastIndex(sp, "/")])
 
 	// View path.
 	viewPath = strings.Replace(sp, "static", "views", 1)
@@ -58,7 +59,7 @@ func initHTTP() {
 func listen() {
 	err := http.ListenAndServe(":"+fmt.Sprintf("%d", App.HttpPort), nil)
 	if err != nil {
-		fmt.Printf("[ERRO] BW: Server crashed[ %s ]\n", err)
+		colorLog("[ERRO] BW: Server crashed[ %s ]\n", err)
 		os.Exit(2)
 	}
 }
@@ -72,7 +73,7 @@ func Close() {
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	b, err := loadFile(viewPath + "/home.html")
 	if err != nil {
-		fmt.Printf("[ERRO] BW: Fail to load template[ %s ]\n", err)
+		colorLog("[ERRO] BW: Fail to load template[ %s ]\n", err)
 		os.Exit(2)
 	}
 	t := template.New("home.html")
@@ -104,18 +105,18 @@ func (c *command) addParam(key, value string) {
 
 func connectHandler(ws *websocket.Conn) {
 	if currentWebsocket != nil {
-		fmt.Printf("[INFO] BW: Connection has already been established, ignore.\n")
+		colorLog("[INFO] BW: Connection has already been established, ignore.\n")
 		return
 	}
 
 	var cmd command
 	if err := websocket.JSON.Receive(ws, &cmd); err != nil {
-		fmt.Printf("[ERRO] BW: Fail to establish connection[ %s ]\n", err)
+		colorLog("[ERRO] BW: Fail to establish connection[ %s ]\n", err)
 	} else {
 		currentWebsocket = ws
 		connectChannel <- cmd
 		beewatchEnabled = true
-		fmt.Printf("[INFO] BW: Connected to browser, ready to watch.\n")
+		colorLog("[SUCC] BW: Connected to browser, ready to watch.\n")
 		receiveLoop()
 	}
 }
@@ -125,28 +126,28 @@ func receiveLoop() {
 	for {
 		var cmd command
 		if err := websocket.JSON.Receive(currentWebsocket, &cmd); err != nil {
-			fmt.Printf("[ERRO] BW: connectHandler.JSON.Receive failed[ %s ]\n", err)
+			colorLog("[ERRO] BW: connectHandler.JSON.Receive failed[ %s ]\n", err)
 			cmd = command{Action: "QUIT"}
 		}
 
-		fmt.Printf("[RECE] BW: %v.\n", cmd)
+		colorLog("[SUCC] BW: Received %v.\n", cmd)
 		if "QUIT" == cmd.Action {
 			beewatchEnabled = false
-			fmt.Printf("[INFO] BW: Browser requests disconnect.\n")
+			colorLog("[INFO] BW: Browser requests disconnect.\n")
 			currentWebsocket.Close()
 			currentWebsocket = nil
 			toBrowserChannel <- cmd
 			if cmd.Parameters["PASSIVE"] == "1" {
 				fromBrowserChannel <- cmd
 			}
-			fmt.Printf("[INFO] BW: Disconnected.\n")
+			colorLog("[WARN] BW: Disconnected.\n")
 			break
 		} else {
 			fromBrowserChannel <- cmd
 		}
 	}
 
-	fmt.Printf("[INFO] BW: Exit receive loop.\n")
+	colorLog("[WARN] BW: Exit receive loop.\n")
 	go sendLoop()
 }
 
@@ -155,7 +156,7 @@ func receiveLoop() {
 // If the command action is quit then abort the loop.
 func sendLoop() {
 	if currentWebsocket == nil {
-		fmt.Printf("[INFO] BW: No connection, wait for it.\n")
+		colorLog("[INFO] BW: No connection, wait for it.\n")
 		cmd := <-connectChannel
 		if "QUIT" == cmd.Action {
 			return
@@ -169,15 +170,15 @@ func sendLoop() {
 		}
 
 		if currentWebsocket == nil {
-			fmt.Printf("[INFO] BW: No connection, wait for it.\n")
+			colorLog("[INFO] BW: No connection, wait for it.\n")
 			cmd := <-connectChannel
 			if "QUIT" == cmd.Action {
 				break
 			}
 		}
 		websocket.JSON.Send(currentWebsocket, &next)
-		fmt.Printf("[SENT] BW: %v.\n", next)
+		colorLog("[SUCC] BW: Sent %v.\n", next)
 	}
 
-	fmt.Printf("[INFO] BW: Exit send loop.\n")
+	colorLog("[WARN] BW: Exit send loop.\n")
 }
