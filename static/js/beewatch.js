@@ -84,6 +84,7 @@ function addTime(logdiv, cls, level) {
     stamp.className = cls;
     logdiv.appendChild(stamp);
 }
+
 function timeHHMMSS() {
     return new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1");
 }
@@ -93,7 +94,6 @@ function addTitle(logdiv, title) {
     name.innerHTML = " " + title;
     logdiv.appendChild(name);
 }
-
 
 function addMessage(logdiv, msg, level) {
     var txt = document.createElement("span");
