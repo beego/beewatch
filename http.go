@@ -51,8 +51,8 @@ func initHTTP() {
 	data["AppVer"] = "v" + APP_VER
 	data["AppName"] = App.Name
 
-	go listen()
 	go sendLoop()
+	go listen()
 }
 
 func listen() {
@@ -108,14 +108,14 @@ func connectHandler(ws *websocket.Conn) {
 		return
 	}
 
-	currentWebsocket = ws
 	var cmd command
-	if err := websocket.JSON.Receive(currentWebsocket, &cmd); err != nil {
-		currentWebsocket = nil
+	if err := websocket.JSON.Receive(ws, &cmd); err != nil {
 		fmt.Printf("[ERRO] BW: Fail to establish connection[ %s ]\n", err)
 	} else {
-		fmt.Printf("[INFO] BW: Connected to browser, ready to watch.\n")
+		currentWebsocket = ws
 		connectChannel <- cmd
+		beewatchEnabled = true
+		fmt.Printf("[INFO] BW: Connected to browser, ready to watch.\n")
 		receiveLoop()
 	}
 }
@@ -136,13 +136,18 @@ func receiveLoop() {
 			fmt.Printf("[INFO] BW: Browser requests disconnect.\n")
 			currentWebsocket.Close()
 			currentWebsocket = nil
-			fromBrowserChannel <- cmd
+			toBrowserChannel <- cmd
+			if cmd.Parameters["PASSIVE"] == "1" {
+				fromBrowserChannel <- cmd
+			}
 			fmt.Printf("[INFO] BW: Disconnected.\n")
 			break
 		} else {
 			fromBrowserChannel <- cmd
 		}
 	}
+
+	go sendLoop()
 }
 
 // sendLoop takes commands from a channel to send to the browser (debugger).
@@ -162,6 +167,7 @@ func sendLoop() {
 		if "QUIT" == next.Action {
 			break
 		}
+
 		if currentWebsocket == nil {
 			fmt.Printf("[INFO] BW: No connection, wait for it.\n")
 			cmd := <-connectChannel
@@ -172,4 +178,6 @@ func sendLoop() {
 		websocket.JSON.Send(currentWebsocket, &next)
 		fmt.Printf("[SENT] BW: %v.\n", next)
 	}
+
+	fmt.Printf("[INFO] BW: Exit send loop.\n")
 }

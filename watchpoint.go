@@ -69,6 +69,7 @@ func (wp *WatchPoint) Display(wl debugLevel, nameValuePairs ...interface{}) *Wat
 		wp.disabled = true
 		return wp
 	}
+
 	channelExchangeCommands(wl, cmd)
 	return wp
 }

@@ -55,7 +55,7 @@ function onMessage(evt) {
             sendResume();
             return;
         case "DONE":
-            actionDisconnect();
+            actionDisconnect(true);
             return;
     }
 }
@@ -132,11 +132,11 @@ function watchParametersToHtml(parameters) {
     return line
 }
 
-function actionDisconnect() {
+function actionDisconnect(passive) {
     if (!connected) return;
     connected = false;
     //document.getElementById("disconnect").className = "buttonDisabled";
-    sendQuit();
+    sendQuit(passive);
     writeToScreen("Disconnected.", "label label-funky", "INFO", "");
     websocket.close();  // seems not to trigger close on Go-side ; so handleDisconnected cannot be used here.
 }
@@ -149,8 +149,12 @@ function sendResume() {
     doSend('{"Action":"RESUME"}');
 }
 
-function sendQuit() {
-    doSend('{"Action":"QUIT"}');
+function sendQuit(passive) {
+    if (passive){
+        doSend('{"Action":"QUIT","Parameters":{"PASSIVE":"1"}}');
+    }else{
+        doSend('{"Action":"QUIT","Parameters":{"PASSIVE":"0"}}');
+    }
 }
 
 function doSend(message) {
