@@ -126,8 +126,7 @@ func receiveLoop() {
 		var cmd command
 		if err := websocket.JSON.Receive(currentWebsocket, &cmd); err != nil {
 			fmt.Printf("[ERRO] BW: connectHandler.JSON.Receive failed[ %s ]\n", err)
-			fromBrowserChannel <- command{Action: "QUIT"}
-			break
+			cmd = command{Action: "QUIT"}
 		}
 
 		fmt.Printf("[RECE] BW: %v.\n", cmd)
@@ -147,6 +146,7 @@ func receiveLoop() {
 		}
 	}
 
+	fmt.Printf("[INFO] BW: Exit receive loop.\n")
 	go sendLoop()
 }
 
