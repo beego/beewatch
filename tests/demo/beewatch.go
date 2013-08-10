@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	beewatch.Start(beewatch.LevelTrace)
+	beewatch.Start()
 
 	appName := "Bee Watch"
 	beewatch.Info().Display("App Name", appName).Break().

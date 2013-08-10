@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	APP_VER = "0.2.0.0810"
+	APP_VER = "0.4.0.0810"
 )
 
 type debugLevel int
@@ -40,15 +40,27 @@ var (
 var App struct {
 	Name     string `json:"app_name"`
 	HttpPort int    `json:"http_port"`
+	CmdMode  bool   `json:"cmd_mode"`
 }
 
 // Start initialize debugger data.
-func Start(wl debugLevel) {
+func Start(wl ...debugLevel) {
 	colorLog("[INIT] BW: Bee Watch v%s.\n", APP_VER)
-	loadJSON()
-	watchLevel = wl
 	beewatchEnabled = true
-	initHTTP()
+
+	watchLevel = LevelTrace
+	if len(wl) > 0 {
+		watchLevel = wl[0]
+	}
+
+	App.Name = "Bee Watch"
+	App.HttpPort = 23456
+
+	loadJSON()
+
+	if !App.CmdMode {
+		initHTTP()
+	}
 }
 
 func loadJSON() {

@@ -65,7 +65,7 @@ func listen() {
 }
 
 func Close() {
-	if beewatchEnabled {
+	if beewatchEnabled && !App.CmdMode {
 		channelExchangeCommands(LevelCritical, command{Action: "DONE"})
 	}
 }

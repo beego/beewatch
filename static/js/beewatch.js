@@ -69,8 +69,9 @@ function onMessage(evt) {
 }
 
 function getTitle(cmd) {
-    var i = cmd.Parameters["go.file"].lastIndexOf("/") + 1;
-    return cmd.Parameters["go.file"].substring(i, cmd.Parameters["go.file"].length) + ":" + cmd.Parameters["go.line"];
+    var filePath = cmd.Parameters["go.file"];
+    var i = filePath.lastIndexOf("/") + 1;
+    return filePath.substring(i, filePath.length) + ":" + cmd.Parameters["go.line"];
 }
 
 function onError(evt) {

@@ -15,6 +15,7 @@
 package beewatch
 
 import (
+	"bytes"
 	"fmt"
 	"runtime"
 	"runtime/debug"
@@ -136,6 +137,7 @@ func trimStack(stack string) string {
 	return strings.Join(lines[c:], "\n")
 }
 
+// Printf formats according to a format specifier and writes to the debugger screen.
 func (wp *WatchPoint) Printf(format string, params ...interface{}) *WatchPoint {
 	wp.offset += 1
 	var content string
@@ -169,9 +171,63 @@ func channelExchangeCommands(wl debugLevel, toCmd command) {
 		return
 	}
 
-	// synchronize command exchange ; break only one goroutine at a time.
-	debuggerMutex.Lock()
-	toBrowserChannel <- toCmd
-	<-fromBrowserChannel
-	debuggerMutex.Unlock()
+	if App.CmdMode {
+		cmdExchange(toCmd)
+	} else {
+		// synchronize command exchange ; break only one goroutine at a time.
+		debuggerMutex.Lock()
+		toBrowserChannel <- toCmd
+		<-fromBrowserChannel
+		debuggerMutex.Unlock()
+	}
+}
+
+func cmdExchange(cmd command) {
+	switch cmd.Action {
+	case "PRINT", "DISPLAY":
+		colorLog("[%s] DEBUG( %s ) --> %s\n", levelToCmdFormat(cmd.Level),
+			getTitle(cmd), watchParametersToStr(cmd.Parameters))
+	case "BREAK":
+		colorLog("[%s] BREAK:\n# %s #\n", levelToCmdFormat(cmd.Level),
+			cmd.Parameters["go.stack"])
+
+		fmt.Print("press ENTER to continue...")
+		fmt.Scanln()
+	}
+}
+
+func levelToCmdFormat(level string) string {
+	switch level {
+	case "TRACE":
+		return "TRAC"
+	case "INFO":
+		return level
+	case "CRITICAL":
+		return "WARN"
+	default:
+		return level
+	}
+
+}
+func getTitle(cmd command) string {
+	fp := cmd.Parameters["go.file"]
+	i := strings.LastIndex(fp, "/") + 1
+	return fp[i:] + ":" + cmd.Parameters["go.line"]
+}
+
+func watchParametersToStr(parameters map[string]string) string {
+	buf := new(bytes.Buffer)
+	multiline := false
+
+	for n, v := range parameters {
+		if !strings.HasPrefix(n, "go.") {
+			if multiline {
+				buf.WriteString(", ")
+			}
+			buf.WriteString(n + " => " + v)
+			multiline = true
+		}
+	}
+
+	return buf.String()
 }

@@ -98,10 +98,13 @@ const (
 )
 
 // colorLog colors log and print to stdout.
-// Log format: [<level>] <content [path]> [ error ].
-// Level: ERRO -> red; WARN -> Magenta; SUCC -> green; others -> default.
+// Log format: <level> <content [highlight][path]> [ error ].
+// Level: REAC -> blue; ERRO -> red; WARN -> Magenta; SUCC -> green; others -> default.
 // Content: default; path: yellow; error -> red.
-// Errors have to surrounded by "[ " and " ]"(space).
+// Level has to be surrounded by "[" and "]".
+// Highlights have to be surrounded by "# " and " #"(space).
+// Paths have to be surrounded by "( " and " )"(sapce).
+// Errors have to be surrounded by "[ " and " ]"(space).
 func colorLog(format string, a ...interface{}) {
 	log := fmt.Sprintf(format, a...)
 	if runtime.GOOS != "windows" {
@@ -123,6 +126,10 @@ func colorLog(format string, a ...interface{}) {
 		log = strings.Replace(log, "( ", fmt.Sprintf("(\033[%dm", Yellow), -1)
 		log = strings.Replace(log, " )", EndColor+")", -1)
 
+		// Highlights.
+		log = strings.Replace(log, "# ", fmt.Sprintf("\033[%dm", Gray), -1)
+		log = strings.Replace(log, " #", EndColor, -1)
+
 		log = clog + log
 	}
 
@@ -133,6 +140,8 @@ func colorLog(format string, a ...interface{}) {
 func getColorLevel(level string) string {
 	level = strings.ToUpper(level)
 	switch level {
+	case "TRAC":
+		return fmt.Sprintf("\033[%dm%s\033[0m", Blue, level)
 	case "ERRO":
 		return fmt.Sprintf("\033[%dm%s\033[0m", Red, level)
 	case "WARN":
