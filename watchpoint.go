@@ -17,6 +17,8 @@ package beewatch
 import (
 	"fmt"
 	"runtime"
+	"runtime/debug"
+	"strings"
 	"sync"
 )
 
@@ -28,23 +30,37 @@ type WatchPoint struct {
 	offset     int
 }
 
-// Display sends variable name:value pairs to the debugger.
-// The parameter 'nameValuePairs' must be even sized.
-func Display(wl debugLevel, nameValuePairs ...interface{}) *WatchPoint {
-	if !beewatchEnabled || wl < watchLevel {
-		return &WatchPoint{disabled: true}
+// Trace debug level.
+func Trace() *WatchPoint {
+	return setlevel(LevelTrace)
+}
+
+// Info debug level.
+func Info() *WatchPoint {
+	return setlevel(LevelInfo)
+}
+
+// Critical debug level.
+func Critical() *WatchPoint {
+	return setlevel(LevelCritical)
+}
+
+func setlevel(wl debugLevel) *WatchPoint {
+	disabled := false
+	if !beewatchEnabled || watchLevel >= LevelInfo {
+		disabled = true
 	}
 
-	wp := &WatchPoint{
+	return &WatchPoint{
+		disabled:   disabled,
 		watchLevel: wl,
-		offset:     2,
+		offset:     1,
 	}
-	return wp.Display(wl, nameValuePairs...)
 }
 
 // Display sends variable name,value pairs to the debugger. Values are formatted using %#v.
 // The parameter 'nameValuePairs' must be even sized.
-func (wp *WatchPoint) Display(wl debugLevel, nameValuePairs ...interface{}) *WatchPoint {
+func (wp *WatchPoint) Display(nameValuePairs ...interface{}) *WatchPoint {
 	if wp.disabled {
 		return wp
 	}
@@ -52,7 +68,7 @@ func (wp *WatchPoint) Display(wl debugLevel, nameValuePairs ...interface{}) *Wat
 	_, file, line, ok := runtime.Caller(wp.offset)
 	cmd := command{
 		Action: "DISPLAY",
-		Level:  levelToStr(wl),
+		Level:  levelToStr(wp.watchLevel),
 	}
 	if ok {
 		cmd.addParam("go.file", file)
@@ -70,8 +86,54 @@ func (wp *WatchPoint) Display(wl debugLevel, nameValuePairs ...interface{}) *Wat
 		return wp
 	}
 
-	channelExchangeCommands(wl, cmd)
+	channelExchangeCommands(wp.watchLevel, cmd)
 	return wp
+}
+
+// Break halts the execution of the program and waits for an instruction from the debugger (e.g. Resume).
+// Break is only effective if all (if any) conditions are true. The program will resume otherwise.
+func (wp *WatchPoint) Break(conditions ...bool) *WatchPoint {
+	if wp.disabled {
+		return wp
+	}
+
+	suspend(wp, conditions...)
+	return wp
+}
+
+// suspend will create a new Command and send it to the browser.
+func suspend(wp *WatchPoint, conditions ...bool) {
+	for _, condition := range conditions {
+		if !condition {
+			return
+		}
+	}
+
+	_, file, line, ok := runtime.Caller(wp.offset)
+	cmd := command{
+		Action: "BREAK",
+		Level:  levelToStr(wp.watchLevel),
+	}
+	if ok {
+		cmd.addParam("go.file", file)
+		cmd.addParam("go.line", fmt.Sprint(line))
+		cmd.addParam("go.stack", trimStack(string(debug.Stack())))
+	}
+	channelExchangeCommands(wp.watchLevel, cmd)
+}
+
+// Peel off the part of the stack that lives in hopwatch
+func trimStack(stack string) string {
+	lines := strings.Split(stack, "\n")
+	c := 0
+	for _, line := range lines {
+		// means no function in this package.
+		if strings.Index(line, "/beewatch") == -1 {
+			break
+		}
+		c++
+	}
+	return strings.Join(lines[c:], "\n")
 }
 
 // Put a command on the browser channel and wait for the reply command.

@@ -20,12 +20,16 @@ import (
 	"os"
 )
 
+const (
+	APP_VER = "0.2.0.0810"
+)
+
 type debugLevel int
 
 const (
-	Trace debugLevel = iota
-	Info
-	Critical
+	LevelTrace debugLevel = iota
+	LevelInfo
+	LevelCritical
 )
 
 var (
@@ -37,10 +41,6 @@ var App struct {
 	Name     string `json:"app_name"`
 	HttpPort int    `json:"http_port"`
 }
-
-const (
-	APP_VER = "0.1.0.0809"
-)
 
 // Start initialize debugger data.
 func Start(wl debugLevel) {

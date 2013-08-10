@@ -1,6 +1,7 @@
 var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/beewatch";
 var output;
 var connected = false;
+var suspended = false;
 var websocket = new WebSocket(wsUri);
 
 function init() {
@@ -45,17 +46,23 @@ function onMessage(evt) {
     try {
         var cmd = JSON.parse(evt.data);
     } catch (e) {
-        console.log('[ERRO] Failed to read valid JSON: ', e.message.data);
+        writeToScreen("Failed to read valid JSON", "label label-funky", "ERRO", e.message.data);
         return;
     }
 
     switch (cmd.Action) {
         case "DISPLAY":
-            writeToScreen(getTitle(cmd), "label label-info", "INFO", watchParametersToHtml(cmd.Parameters));
+            writeToScreen(getTitle(cmd), getLevelCls(cmd.Level), cmd.Level, watchParametersToHtml(cmd.Parameters));
             sendResume();
             return;
         case "DONE":
             actionDisconnect(true);
+            return;
+        case "BREAK":
+            suspended = true;
+            var logdiv = writeToScreen("program suspended -->", getLevelCls(cmd.Level), cmd.Level, "");
+            addStack(logdiv, cmd);
+//            handleSourceUpdate(cmd);
             return;
     }
 }
@@ -66,7 +73,7 @@ function getTitle(cmd) {
 }
 
 function onError(evt) {
-    //writeToScreen(evt, "err mono");
+    writeToScreen("WebScoket error", "label label-funky", "ERRO", evt.data);
 }
 
 function writeToScreen(title, cls, level, msg) {
@@ -74,8 +81,9 @@ function writeToScreen(title, cls, level, msg) {
     addTime(logdiv, cls, level);
     addTitle(logdiv, title);
     addMessage(logdiv, msg, level);
-    logdiv.scrollIntoView();
     output.appendChild(logdiv);
+    logdiv.scrollIntoView();
+    return logdiv;
 }
 
 function addTime(logdiv, cls, level) {
@@ -110,10 +118,60 @@ function addMessage(logdiv, msg, level) {
     logdiv.appendChild(txt);
 }
 
+function addStack(logdiv, cmd) {
+    var stack = cmd.Parameters["go.stack"];
+    if (stack != null && stack.length > 0) {
+        addNonEmptyStackTo(stack, logdiv);
+    }
+}
+
+function addNonEmptyStackTo(stack, logdiv) {
+    var toggle = document.createElement("a");
+    toggle.href = "#";
+    toggle.className = "label label-primary";
+    toggle.onclick = function () {
+        toggleStack(toggle);
+    };
+    toggle.innerHTML = "Stack &#x25B6;";
+    logdiv.appendChild(toggle);
+
+    var stk = document.createElement("div");
+    stk.style.display = "none";
+    var lines = document.createElement("pre");
+    lines.innerHTML = stack
+    stk.appendChild(lines)
+    logdiv.appendChild(stk)
+}
+
+function toggleStack(link) {
+    var stack = link.nextSibling;
+    if (stack.style.display == "none") {
+        link.innerHTML = "Stack &#x25BC;";
+        stack.style.display = "block"
+        stack.scrollIntoView();
+    } else {
+        link.innerHTML = "Stack &#x25B6;";
+        stack.style.display = "none";
+    }
+}
+
 function getMsgClass(level) {
     switch (level) {
         case "INIT", "INFO":
             return "text-success";
+    }
+}
+
+function getLevelCls(level) {
+    switch (level) {
+        case "TRACE":
+            return "label";
+        case "INFO":
+            return "label label-info";
+        case "CRITICAL":
+            return "label label-danger";
+        default:
+            return "lable";
     }
 }
 
@@ -125,11 +183,20 @@ function watchParametersToHtml(parameters) {
             if (multiline) {
                 line = line + ", ";
             }
-            line = line + prop + "=" + parameters[prop];
+            line = line + prop + " => " + parameters[prop];
             multiline = true;
         }
     }
     return line
+}
+
+function actionResume() {
+    if (!connected) return;
+    if (!suspended) return;
+    suspended = false;
+    //document.getElementById("resume").className = "buttonDisabled";
+    writeToScreen("<-- resume program.", "label label-info", "INFO", "");
+    sendResume();
 }
 
 function actionDisconnect(passive) {
@@ -137,7 +204,7 @@ function actionDisconnect(passive) {
     connected = false;
     //document.getElementById("disconnect").className = "buttonDisabled";
     sendQuit(passive);
-    writeToScreen("Disconnected.", "label label-funky", "INFO", "");
+    writeToScreen("Disconnected.", "label label-funky", "CRITICAL", "");
     websocket.close();  // seems not to trigger close on Go-side ; so handleDisconnected cannot be used here.
 }
 
@@ -150,9 +217,9 @@ function sendResume() {
 }
 
 function sendQuit(passive) {
-    if (passive){
+    if (passive) {
         doSend('{"Action":"QUIT","Parameters":{"PASSIVE":"1"}}');
-    }else{
+    } else {
         doSend('{"Action":"QUIT","Parameters":{"PASSIVE":"0"}}');
     }
 }
@@ -162,4 +229,13 @@ function doSend(message) {
     websocket.send(message);
 }
 
+function handleKeyDown(event) {
+    switch (event.keyCode) {
+        case 119: // F8.
+            actionResume();
+        case 120: // F9.
+    }
+}
+
 window.addEventListener("load", init, false);
+window.addEventListener("keydown", handleKeyDown, true);

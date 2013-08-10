@@ -75,11 +75,11 @@ func loadFile(path string) ([]byte, error) {
 // levelToStr returns string format of debug level.
 func levelToStr(wl debugLevel) string {
 	switch wl {
-	case Trace:
+	case LevelTrace:
 		return "TRACE"
-	case Info:
+	case LevelInfo:
 		return "INFO"
-	case Critical:
+	case LevelCritical:
 		return "CRITICAL"
 	default:
 		return "UNKNOWN"
@@ -116,12 +116,12 @@ func colorLog(format string, a ...interface{}) {
 		log = log[i+1:]
 
 		// Error.
-		log = strings.Replace(log, "[ ", fmt.Sprintf("[ \033[%dm", Red), -1)
-		log = strings.Replace(log, " ]", EndColor+" ]", -1)
+		log = strings.Replace(log, "[ ", fmt.Sprintf("[\033[%dm", Red), -1)
+		log = strings.Replace(log, " ]", EndColor+"]", -1)
 
 		// Path.
-		log = strings.Replace(log, "(", fmt.Sprintf("(\033[%dm", Yellow), -1)
-		log = strings.Replace(log, ")", EndColor+")", -1)
+		log = strings.Replace(log, "( ", fmt.Sprintf("(\033[%dm", Yellow), -1)
+		log = strings.Replace(log, " )", EndColor+")", -1)
 
 		log = clog + log
 	}

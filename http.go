@@ -39,7 +39,7 @@ func initHTTP() {
 
 	http.Handle("/static/", http.StripPrefix("/static/",
 		http.FileServer(http.Dir(sp))))
-	colorLog("[INIT] BW: File server(%s)\n",
+	colorLog("[INIT] BW: File server( %s )\n",
 		sp[:strings.LastIndex(sp, "/")])
 
 	// View path.
@@ -66,7 +66,7 @@ func listen() {
 
 func Close() {
 	if beewatchEnabled {
-		channelExchangeCommands(Critical, command{Action: "DONE"})
+		channelExchangeCommands(LevelCritical, command{Action: "DONE"})
 	}
 }
 
