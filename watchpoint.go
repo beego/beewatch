@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -191,6 +192,14 @@ func cmdExchange(cmd command) {
 		colorLog("[%s] BREAK:\n# %s #\n", levelToCmdFormat(cmd.Level),
 			cmd.Parameters["go.stack"])
 
+		fmt.Print("press ENTER to view source...")
+		fmt.Scanln()
+
+		line, _ := strconv.Atoi(cmd.Parameters["go.line"])
+		fmt.Println()
+		colorLog("[%s] Source( %s ):\n%s", levelToCmdFormat(cmd.Level),
+			cmd.Parameters["go.file"], getFileSource(cmd.Parameters["go.file"], line))
+
 		fmt.Print("press ENTER to continue...")
 		fmt.Scanln()
 	}
@@ -230,4 +239,42 @@ func watchParametersToStr(parameters map[string]string) string {
 	}
 
 	return buf.String()
+}
+
+func getFileSource(path string, line int) string {
+	b, err := loadFile(path)
+	if err != nil {
+		colorLog("[ERRO] BW: Fail to load source file[ %s ]\n", err)
+	}
+
+	s := strings.Split(string(b), "\n")
+	buf := new(bytes.Buffer)
+
+	showNum := App.SrcLine / 2
+	for i, v := range s {
+		if (i+1 <= line-showNum) || (i+1 >= line+showNum) {
+			continue
+		}
+
+		buf.WriteString(fmt.Sprint(i + 1))
+		buf.WriteString(computeSpaces(i+1, len(s)))
+		v = strings.Replace(v, "\t", "    ", -1)
+
+		if i != line-1 {
+			buf.WriteString(v)
+		} else {
+			if v[len(v)-1] == ',' || v[len(v)-1] == '.' {
+				line++
+			}
+			buf.WriteString("# " + v + " #")
+		}
+
+		buf.WriteString("\n")
+	}
+
+	return buf.String()
+}
+
+func computeSpaces(line, total int) string {
+	return strings.Repeat(" ", (total/10)-(line/10)+1)
 }

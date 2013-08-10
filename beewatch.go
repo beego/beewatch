@@ -41,6 +41,7 @@ var App struct {
 	Name     string `json:"app_name"`
 	HttpPort int    `json:"http_port"`
 	CmdMode  bool   `json:"cmd_mode"`
+	SrcLine  int    `json:"source_line"`
 }
 
 // Start initialize debugger data.
@@ -55,6 +56,7 @@ func Start(wl ...debugLevel) {
 
 	App.Name = "Bee Watch"
 	App.HttpPort = 23456
+	App.SrcLine = 20
 
 	loadJSON()
 

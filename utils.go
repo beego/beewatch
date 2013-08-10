@@ -99,7 +99,7 @@ const (
 
 // colorLog colors log and print to stdout.
 // Log format: <level> <content [highlight][path]> [ error ].
-// Level: REAC -> blue; ERRO -> red; WARN -> Magenta; SUCC -> green; others -> default.
+// Level: TRAC -> blue; ERRO -> red; WARN -> Magenta; SUCC -> green; others -> default.
 // Content: default; path: yellow; error -> red.
 // Level has to be surrounded by "[" and "]".
 // Highlights have to be surrounded by "# " and " #"(space).
