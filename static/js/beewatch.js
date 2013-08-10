@@ -51,6 +51,7 @@ function onMessage(evt) {
     }
 
     switch (cmd.Action) {
+        case "PRINT":
         case "DISPLAY":
             writeToScreen(getTitle(cmd), getLevelCls(cmd.Level), cmd.Level, watchParametersToHtml(cmd.Parameters));
             sendResume();
@@ -204,7 +205,7 @@ function actionDisconnect(passive) {
     connected = false;
     //document.getElementById("disconnect").className = "buttonDisabled";
     sendQuit(passive);
-    writeToScreen("Disconnected.", "label label-funky", "CRITICAL", "");
+    writeToScreen("Disconnected.", "label label-funky", "INFO", "");
     websocket.close();  // seems not to trigger close on Go-side ; so handleDisconnected cannot be used here.
 }
 

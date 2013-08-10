@@ -136,6 +136,33 @@ func trimStack(stack string) string {
 	return strings.Join(lines[c:], "\n")
 }
 
+func (wp *WatchPoint) Printf(format string, params ...interface{}) *WatchPoint {
+	wp.offset += 1
+	var content string
+	if len(params) == 0 {
+		content = format
+	} else {
+		content = fmt.Sprintf(format, params...)
+	}
+	return wp.printcontent(content)
+}
+
+// Printf formats according to a format specifier and writes to the debugger screen.
+func (wp *WatchPoint) printcontent(content string) *WatchPoint {
+	_, file, line, ok := runtime.Caller(wp.offset)
+	cmd := command{
+		Action: "PRINT",
+		Level:  levelToStr(wp.watchLevel),
+	}
+	if ok {
+		cmd.addParam("go.file", file)
+		cmd.addParam("go.line", fmt.Sprint(line))
+	}
+	cmd.addParam("PRINT", content)
+	channelExchangeCommands(wp.watchLevel, cmd)
+	return wp
+}
+
 // Put a command on the browser channel and wait for the reply command.
 func channelExchangeCommands(wl debugLevel, toCmd command) {
 	if !beewatchEnabled || wl < watchLevel {

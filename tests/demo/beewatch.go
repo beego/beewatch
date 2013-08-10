@@ -8,8 +8,8 @@ func main() {
 	beewatch.Start(beewatch.LevelTrace)
 
 	appName := "Bee Watch"
-	beewatch.Info().Display("App Name", appName)
-	beewatch.Info().Break()
+	beewatch.Info().Display("App Name", appName).Break().
+		Printf("Application name is %s.", appName)
 	beewatch.Critical().Break()
 	beewatch.Trace().Break()
 	beewatch.Close()
