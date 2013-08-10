@@ -46,6 +46,7 @@ func initHTTP() {
 	viewPath = strings.Replace(sp, "static", "views", 1)
 
 	http.HandleFunc("/", mainPage)
+	http.HandleFunc("/gosource", gosource)
 	http.Handle("/beewatch", websocket.Handler(connectHandler))
 
 	data = make(map[interface{}]interface{})
@@ -79,6 +80,14 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	t := template.New("home.html")
 	t.Parse(string(b))
 	t.Execute(w, data)
+}
+
+// serve a (source) file for displaying in the debugger
+func gosource(w http.ResponseWriter, r *http.Request) {
+	fileName := r.FormValue("file")
+	// should check for permission?
+	w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
+	http.ServeFile(w, r, fileName)
 }
 
 var (
@@ -140,6 +149,7 @@ func receiveLoop() {
 			if cmd.Parameters["PASSIVE"] == "1" {
 				fromBrowserChannel <- cmd
 			}
+			close(toBrowserChannel)
 			colorLog("[WARN] BW: Disconnected.\n")
 			break
 		} else {
@@ -180,5 +190,6 @@ func sendLoop() {
 		colorLog("[SUCC] BW: Sent %v.\n", next)
 	}
 
+	close(fromBrowserChannel)
 	colorLog("[WARN] BW: Exit send loop.\n")
 }

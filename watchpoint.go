@@ -55,7 +55,7 @@ func setlevel(wl debugLevel) *WatchPoint {
 	return &WatchPoint{
 		disabled:   disabled,
 		watchLevel: wl,
-		offset:     1,
+		offset:     2,
 	}
 }
 

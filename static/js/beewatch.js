@@ -63,7 +63,7 @@ function onMessage(evt) {
             suspended = true;
             var logdiv = writeToScreen("program suspended -->", getLevelCls(cmd.Level), cmd.Level, "");
             addStack(logdiv, cmd);
-//            handleSourceUpdate(cmd);
+            //handleSourceUpdate(cmd);
             return;
     }
 }
@@ -190,6 +190,61 @@ function watchParametersToHtml(parameters) {
         }
     }
     return line
+}
+
+function handleSourceUpdate(cmd) {
+    loadSource(cmd.Parameters["go.file"], cmd.Parameters["go.line"]);
+}
+
+function loadSource(fileName, nr) {
+    $("#gofile").html(shortenFileName(fileName));
+    $("#source_panel").show();
+    $.ajax({
+        url:"/gosource?file=" + fileName
+    }).done(
+        function (responseText, status, xhr) {
+            handleSourceLoaded(responseText, nr);
+        }
+    );
+}
+
+function handleSourceLoaded(responseText, line) {
+    gosource = $("#gosource");
+    document.getElementById("source_panel").style.width = (document.body.clientWidth - 800) + "px";
+    gosource.empty();
+    var breakElm
+    // Insert line numbers
+    var arr = responseText.split('\n');
+    for (var i = 0; i < arr.length; i++) {
+        var nr = i + 1
+        var buf = space_padded(nr) + arr[i];
+        var elm = document.createElement("div");
+        elm.innerHTML = buf;
+        if (line == nr) {
+            elm.className = "break";
+            breakElm = elm
+        }
+        gosource.append(elm)
+    }
+    breakElm.scrollIntoView();
+}
+
+function space_padded(i) {
+    var buf = "" + i
+    if (i < 1000) {
+        buf += " "
+    }
+    if (i < 100) {
+        buf += " "
+    }
+    if (i < 10) {
+        buf += " "
+    }
+    return buf
+}
+
+function shortenFileName(fileName) {
+    return fileName.length > 48 ? "..." + fileName.substring(fileName.length - 48) : fileName;
 }
 
 function actionResume() {

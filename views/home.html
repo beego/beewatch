@@ -2,10 +2,11 @@
 	<head>
 		<title>Bee Watch Debugger</title>
 		<meta charset="utf-8" />
-		<link href="/static/css/normalize.css" rel="stylesheet" type="text/css" >	
-		<link href="/static/css/furatto.css" rel="stylesheet" type="text/css" >	
+		<link type="text/css" href="/static/css/normalize.css" rel="stylesheet">	
+		<link type="text/css" href="/static/css/furatto.css" rel="stylesheet">	
 		<!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script-->
-		<script src="/static/js/beewatch.js" type="text/javascript"></script>
+		<script type="text/javascript" src="/static/js/jquery-1.10.2.min.js"></script>
+		<script type="text/javascript" src="/static/js/beewatch.js"></script>
 	</head>
 
 	<body style="padding-top: 65px; font-family: Microsoft Yahei; font-size: 14px; background-color: rgb(242, 242, 242);">
@@ -28,7 +29,15 @@
 			</div>
 		</div>
 
-		<div id="output" class="main-container"></div>
+		<div id="output">
+			
+		</div>
+
+		<!-- <div id="source_panel" class="span4" style="display: none;">
+			<div id="gofile" class="mono">something</div>
+			<div id="nrs" class="mono"></div>
+			<div id="gosource" class="mono">
+		</div> -->
 
 		<div class="footer">
 			<div class="footer-wrapper">

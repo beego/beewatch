@@ -1,5 +1,5 @@
 {
 	"app_name": "Bee Watch Demo",
 	"http_port": 23456,
-	"cmd_mode": true
+	"cmd_mode": false
 }

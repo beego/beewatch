@@ -4,3 +4,18 @@
   font-size: 50%;
   color: rgb(204, 154, 204);
 }
+
+.mono {
+	font-family: "Lucida Console", Monaco, monospace;
+	font-size: 13px;
+}
+
+.break {
+	background-color: #375EAB;
+	color: #FFF;
+}
+
+#gosource {
+	background: 	#FFD;
+	white-space:	pre; 		
+}
