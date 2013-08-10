@@ -66,7 +66,7 @@ func listen() {
 }
 
 func Close() {
-	if beewatchEnabled && !App.CmdMode {
+	if App.WatchEnabled && !App.CmdMode {
 		channelExchangeCommands(LevelCritical, command{Action: "DONE"})
 	}
 }
@@ -124,7 +124,7 @@ func connectHandler(ws *websocket.Conn) {
 	} else {
 		currentWebsocket = ws
 		connectChannel <- cmd
-		beewatchEnabled = true
+		App.WatchEnabled = true
 		colorLog("[SUCC] BW: Connected to browser, ready to watch.\n")
 		receiveLoop()
 	}
@@ -141,7 +141,7 @@ func receiveLoop() {
 
 		colorLog("[SUCC] BW: Received %v.\n", cmd)
 		if "QUIT" == cmd.Action {
-			beewatchEnabled = false
+			App.WatchEnabled = false
 			colorLog("[INFO] BW: Browser requests disconnect.\n")
 			currentWebsocket.Close()
 			currentWebsocket = nil

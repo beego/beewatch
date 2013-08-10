@@ -49,7 +49,7 @@ func Critical() *WatchPoint {
 
 func setlevel(wl debugLevel) *WatchPoint {
 	disabled := false
-	if !beewatchEnabled || watchLevel >= LevelInfo {
+	if !App.WatchEnabled || watchLevel >= LevelInfo {
 		disabled = true
 	}
 
@@ -140,6 +140,10 @@ func trimStack(stack string) string {
 
 // Printf formats according to a format specifier and writes to the debugger screen.
 func (wp *WatchPoint) Printf(format string, params ...interface{}) *WatchPoint {
+	if wp.disabled {
+		return wp
+	}
+
 	wp.offset += 1
 	var content string
 	if len(params) == 0 {
@@ -168,7 +172,7 @@ func (wp *WatchPoint) printcontent(content string) *WatchPoint {
 
 // Put a command on the browser channel and wait for the reply command.
 func channelExchangeCommands(wl debugLevel, toCmd command) {
-	if !beewatchEnabled || wl < watchLevel {
+	if !App.WatchEnabled || wl < watchLevel {
 		return
 	}
 
@@ -250,9 +254,8 @@ func getFileSource(path string, line int) string {
 	s := strings.Split(string(b), "\n")
 	buf := new(bytes.Buffer)
 
-	showNum := App.SrcLine / 2
 	for i, v := range s {
-		if (i+1 <= line-showNum) || (i+1 >= line+showNum) {
+		if (i+1 <= line-10) || (i+1 >= line+10) {
 			continue
 		}
 

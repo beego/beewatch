@@ -63,7 +63,7 @@ function onMessage(evt) {
             suspended = true;
             var logdiv = writeToScreen("program suspended -->", getLevelCls(cmd.Level), cmd.Level, "");
             addStack(logdiv, cmd);
-            //handleSourceUpdate(cmd);
+            handleSourceUpdate(logdiv, cmd);
             return;
     }
 }
@@ -134,25 +134,28 @@ function addNonEmptyStackTo(stack, logdiv) {
     toggle.onclick = function () {
         toggleStack(toggle);
     };
-    toggle.innerHTML = "Stack &#x25B6;";
+    toggle.innerHTML = "Stack & Source &#x25B6;";
     logdiv.appendChild(toggle);
 
+    var panel = document.createElement("div");
+    panel.style.display = "none";
+    panel.id = "panel";
     var stk = document.createElement("div");
-    stk.style.display = "none";
     var lines = document.createElement("pre");
-    lines.innerHTML = stack
-    stk.appendChild(lines)
-    logdiv.appendChild(stk)
+    lines.innerHTML = stack;
+    stk.appendChild(lines);
+    panel.appendChild(stk);
+    logdiv.appendChild(panel);
 }
 
 function toggleStack(link) {
     var stack = link.nextSibling;
     if (stack.style.display == "none") {
-        link.innerHTML = "Stack &#x25BC;";
+        link.innerHTML = "Stack & Source &#x25BC;";
         stack.style.display = "block"
         stack.scrollIntoView();
     } else {
-        link.innerHTML = "Stack &#x25B6;";
+        link.innerHTML = "Stack & Source &#x25B6;";
         stack.style.display = "none";
     }
 }
@@ -192,27 +195,34 @@ function watchParametersToHtml(parameters) {
     return line
 }
 
-function handleSourceUpdate(cmd) {
-    loadSource(cmd.Parameters["go.file"], cmd.Parameters["go.line"]);
+
+function handleSourceUpdate(logdiv, cmd) {
+    loadSource(logdiv, cmd.Parameters["go.file"], cmd.Parameters["go.line"]);
 }
 
-function loadSource(fileName, nr) {
+function loadSource(logdiv, fileName, nr) {
     $("#gofile").html(shortenFileName(fileName));
     $("#source_panel").show();
     $.ajax({
-        url:"/gosource?file=" + fileName
-    }).done(
+            url:"/gosource?file=" + fileName
+        }
+    ).
+        done(
         function (responseText, status, xhr) {
-            handleSourceLoaded(responseText, nr);
+            handleSourceLoaded(logdiv, responseText, nr);
         }
     );
 }
 
-function handleSourceLoaded(responseText, line) {
-    gosource = $("#gosource");
-    document.getElementById("source_panel").style.width = (document.body.clientWidth - 800) + "px";
-    gosource.empty();
-    var breakElm
+function handleSourceLoaded(logdiv, responseText, line) {
+    var srcPanel = document.createElement("div");
+    var gofile = document.createElement("div")
+    gofile.className = "mono";
+    var gosrc = document.createElement("div")
+    gosrc.className = "mono";
+    gosrc.id = "gosource";
+    var breakElm;
+
     // Insert line numbers
     var arr = responseText.split('\n');
     for (var i = 0; i < arr.length; i++) {
@@ -224,9 +234,12 @@ function handleSourceLoaded(responseText, line) {
             elm.className = "break";
             breakElm = elm
         }
-        gosource.append(elm)
+        gosrc.appendChild(elm);
     }
-    breakElm.scrollIntoView();
+
+    srcPanel.appendChild(gofile);
+    srcPanel.appendChild(gosrc);
+    logdiv.childNodes[4].appendChild(srcPanel);
 }
 
 function space_padded(i) {
