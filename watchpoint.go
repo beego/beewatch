@@ -255,8 +255,10 @@ func getFileSource(path string, line int) string {
 	buf := new(bytes.Buffer)
 
 	for i, v := range s {
-		if (i+1 <= line-10) || (i+1 >= line+10) {
+		if i+1 <= line-10 {
 			continue
+		} else if i+1 >= line+10 {
+			break
 		}
 
 		buf.WriteString(fmt.Sprint(i + 1))

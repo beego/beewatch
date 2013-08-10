@@ -209,7 +209,7 @@ function loadSource(logdiv, fileName, nr) {
     ).
         done(
         function (responseText, status, xhr) {
-            handleSourceLoaded(logdiv, responseText, nr);
+            handleSourceLoaded(logdiv, responseText, parseInt(nr));
         }
     );
 }
@@ -226,6 +226,12 @@ function handleSourceLoaded(logdiv, responseText, line) {
     // Insert line numbers
     var arr = responseText.split('\n');
     for (var i = 0; i < arr.length; i++) {
+        if ((i + 1 <= line - 10)) {
+            continue;
+        } else if (i + 1 >= line + 10) {
+            break;
+        }
+
         var nr = i + 1
         var buf = space_padded(nr) + arr[i];
         var elm = document.createElement("div");

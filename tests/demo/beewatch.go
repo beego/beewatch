@@ -19,6 +19,7 @@ func main() {
 		go multipletest(i)
 	}
 
+	beewatch.Trace().Printf("Wait 3 seconds...")
 	select {
 	case <-time.After(3 * time.Second):
 		beewatch.Trace().Printf("Done debug")
