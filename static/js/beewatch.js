@@ -68,8 +68,15 @@ function onMessage(evt) {
             actionDisconnect(true);
             return;
         case "BREAK":
-            suspended = true;
-            var logdiv = writeToScreen("program suspended -->", getLevelCls(cmd.Level), cmd.Level, "");
+            var title;
+            if (cmd.Parameters["go.SKIP_SUSPEND"] == "true") {
+                title = "program suspend skiped <->";
+            } else {
+                suspended = true;
+                title = "program suspended -->";
+            }
+            var logdiv = writeToScreen(title, getLevelCls(cmd.Level), cmd.Level, "");
+
             addStack(logdiv, cmd);
             handleSourceUpdate(logdiv, cmd);
             return;
@@ -129,7 +136,12 @@ function addMessage(logdiv, msg, level) {
 }
 
 function addStack(logdiv, cmd) {
-    var stack = cmd.Parameters["go.stack"];
+    var stack;
+    if (cmd.Parameters["go.PRINT_STACK"] != "true") {
+        stack = "'print_stack' disenabled.";
+    } else {
+        stack = cmd.Parameters["go.stack"];
+    }
     if (stack != null && stack.length > 0) {
         addNonEmptyStackTo(stack, logdiv);
     }
@@ -216,41 +228,49 @@ function loadSource(logdiv, fileName, nr) {
     ).
         done(
         function (responseText, status, xhr) {
-            handleSourceLoaded(logdiv, responseText, parseInt(nr));
+            handleSourceLoaded(logdiv, fileName, responseText, parseInt(nr));
         }
     );
 }
 
-function handleSourceLoaded(logdiv, responseText, line) {
+function handleSourceLoaded(logdiv, fileName, responseText, line) {
     var srcPanel = document.createElement("div");
-    var gofile = document.createElement("div")
-    gofile.className = "mono";
     var gosrc = document.createElement("div")
     gosrc.className = "mono";
     gosrc.id = "gosource";
-    var breakElm;
 
-    // Insert line numbers
-    var arr = responseText.split('\n');
-    for (var i = 0; i < arr.length; i++) {
-        if ((i + 1 <= line - 10)) {
-            continue;
-        } else if (i + 1 >= line + 10) {
-            break;
-        }
+    if (responseText.indexOf("\n") > -1) {
+        var breakElm;
 
-        var nr = i + 1
-        var buf = space_padded(nr) + arr[i];
         var elm = document.createElement("div");
-        elm.innerHTML = buf;
-        if (line == nr) {
-            elm.className = "break";
-            breakElm = elm
+        elm.innerHTML = shortenFileName(fileName);
+        gosrc.appendChild(elm);
+
+        // Insert line numbers
+        var arr = responseText.split('\n');
+        for (var i = 0; i < arr.length; i++) {
+            if ((i + 1 <= line - 10)) {
+                continue;
+            } else if (i + 1 >= line + 10) {
+                break;
+            }
+
+            var nr = i + 1
+            var buf = space_padded(nr) + arr[i];
+            var elm = document.createElement("div");
+            elm.innerHTML = buf;
+            if (line == nr) {
+                elm.className = "break";
+                breakElm = elm
+            }
+            gosrc.appendChild(elm);
         }
+    } else {
+        var elm = document.createElement("div");
+        elm.innerHTML = responseText;
         gosrc.appendChild(elm);
     }
 
-    srcPanel.appendChild(gofile);
     srcPanel.appendChild(gosrc);
     logdiv.childNodes[4].appendChild(srcPanel);
 }
@@ -270,7 +290,7 @@ function space_padded(i) {
 }
 
 function shortenFileName(fileName) {
-    return fileName.length > 48 ? "..." + fileName.substring(fileName.length - 48) : fileName;
+    return fileName.length > 60 ? "..." + fileName.substring(fileName.length - 60) : fileName;
 }
 
 function actionResume() {

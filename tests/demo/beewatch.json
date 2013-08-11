@@ -3,7 +3,7 @@
 	"http_port": 23456,
 	"watch_enabled": true,
 	"cmd_mode": false,
-	"skip_suspend": true,
-	"print_stack": false,
-	"print_source": false
+	"skip_suspend": false,
+	"print_stack": true,
+	"print_source": true
 }

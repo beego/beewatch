@@ -17,6 +17,7 @@ package beewatch
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -84,10 +85,14 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 
 // serve a (source) file for displaying in the debugger
 func gosource(w http.ResponseWriter, r *http.Request) {
-	fileName := r.FormValue("file")
-	// should check for permission?
-	w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
-	http.ServeFile(w, r, fileName)
+	if App.PrintSource {
+		fileName := r.FormValue("file")
+		// should check for permission?
+		w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
+		http.ServeFile(w, r, fileName)
+	} else {
+		io.WriteString(w, "'print_source' disenabled.")
+	}
 }
 
 var (

@@ -119,7 +119,9 @@ func suspend(wp *WatchPoint, conditions ...bool) {
 	if ok {
 		cmd.addParam("go.file", file)
 		cmd.addParam("go.line", fmt.Sprint(line))
-		cmd.addParam("go.stack", trimStack(string(debug.Stack())))
+		if App.PrintStack {
+			cmd.addParam("go.stack", trimStack(string(debug.Stack())))
+		}
 	}
 	channelExchangeCommands(wp.watchLevel, cmd)
 }
@@ -183,6 +185,12 @@ func channelExchangeCommands(wl debugLevel, toCmd command) {
 	if App.CmdMode {
 		cmdExchange(toCmd)
 	} else {
+		if toCmd.Action == "BREAK" {
+			toCmd.addParam("go.SKIP_SUSPEND", fmt.Sprint(App.SkipSuspend))
+			toCmd.addParam("go.PRINT_STACK", fmt.Sprint(App.PrintStack))
+			toCmd.addParam("go.PRINT_SOURCE", fmt.Sprint(App.PrintSource))
+		}
+
 		toBrowserChannel <- toCmd
 		if !App.SkipSuspend {
 			<-fromBrowserChannel
