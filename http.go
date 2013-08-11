@@ -145,11 +145,13 @@ func receiveLoop() {
 			colorLog("[INFO] BW: Browser requests disconnect.\n")
 			currentWebsocket.Close()
 			currentWebsocket = nil
-			toBrowserChannel <- cmd
+			//toBrowserChannel <- cmd
 			if cmd.Parameters["PASSIVE"] == "1" {
 				fromBrowserChannel <- cmd
 			}
 			close(toBrowserChannel)
+			close(fromBrowserChannel)
+			App.WatchEnabled = false
 			colorLog("[WARN] BW: Disconnected.\n")
 			break
 		} else {
@@ -158,7 +160,7 @@ func receiveLoop() {
 	}
 
 	colorLog("[WARN] BW: Exit receive loop.\n")
-	go sendLoop()
+	//go sendLoop()
 }
 
 // sendLoop takes commands from a channel to send to the browser (debugger).
@@ -174,7 +176,12 @@ func sendLoop() {
 	}
 
 	for {
-		next := <-toBrowserChannel
+		next, ok := <-toBrowserChannel
+		if !ok {
+			colorLog("[WARN] BW: Send channel was closed.\n")
+			break
+		}
+
 		if "QUIT" == next.Action {
 			break
 		}
@@ -190,6 +197,5 @@ func sendLoop() {
 		colorLog("[SUCC] BW: Sent %v.\n", next)
 	}
 
-	close(fromBrowserChannel)
 	colorLog("[WARN] BW: Exit send loop.\n")
 }

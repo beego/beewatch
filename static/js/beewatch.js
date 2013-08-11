@@ -1,11 +1,19 @@
 var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/beewatch";
 var output;
+var ctrlPanel;
+var varMonitor;
 var connected = false;
 var suspended = false;
 var websocket = new WebSocket(wsUri);
 
 function init() {
     output = document.getElementById("output");
+    ctrlPanel = document.getElementById("control_panel");
+    ctrlPanel.style.width = (document.body.clientWidth - 820) + "px";
+    varMonitor = document.getElementById("variable_monitor");
+    output.style.minHeight = (window.innerHeight - 200) + "px";
+    varMonitor.style.height = (window.innerHeight - 220) + "px";
+
     setupWebSocket();
 }
 
@@ -153,7 +161,6 @@ function toggleStack(link) {
     if (stack.style.display == "none") {
         link.innerHTML = "Stack & Source &#x25BC;";
         stack.style.display = "block"
-        stack.scrollIntoView();
     } else {
         link.innerHTML = "Stack & Source &#x25B6;";
         stack.style.display = "none";
@@ -313,5 +320,11 @@ function handleKeyDown(event) {
     }
 }
 
+function resizeWindow() {
+    output.style.minHeight = (window.innerHeight - 200) + "px";
+    varMonitor.style.height = (window.innerHeight - 220) + "px";
+}
+
 window.addEventListener("load", init, false);
 window.addEventListener("keydown", handleKeyDown, true);
+window.addEventListener("resize", resizeWindow, false)

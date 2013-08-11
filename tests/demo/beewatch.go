@@ -31,5 +31,3 @@ func main() {
 func multipletest(num int) {
 	beewatch.Critical().Break().Display("num", num)
 }
-
-// http://icalialabs.github.io/furatto/javascript.html

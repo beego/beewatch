@@ -58,7 +58,7 @@ func Start(wl ...debugLevel) {
 
 	loadJSON()
 
-	if !App.CmdMode {
+	if App.WatchEnabled && !App.CmdMode {
 		initHTTP()
 	}
 }
