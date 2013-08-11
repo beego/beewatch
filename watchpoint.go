@@ -172,6 +172,10 @@ func (wp *WatchPoint) printcontent(content string) *WatchPoint {
 
 // Put a command on the browser channel and wait for the reply command.
 func channelExchangeCommands(wl debugLevel, toCmd command) {
+	// synchronize command exchange ; break only one goroutine at a time.
+	debuggerMutex.Lock()
+	defer debuggerMutex.Unlock()
+
 	if !App.WatchEnabled || wl < watchLevel {
 		return
 	}
@@ -179,11 +183,10 @@ func channelExchangeCommands(wl debugLevel, toCmd command) {
 	if App.CmdMode {
 		cmdExchange(toCmd)
 	} else {
-		// synchronize command exchange ; break only one goroutine at a time.
-		debuggerMutex.Lock()
 		toBrowserChannel <- toCmd
-		<-fromBrowserChannel
-		debuggerMutex.Unlock()
+		if !App.SkipSuspend {
+			<-fromBrowserChannel
+		}
 	}
 }
 
@@ -193,19 +196,35 @@ func cmdExchange(cmd command) {
 		colorLog("[%s] DEBUG( %s ) --> %s\n", levelToCmdFormat(cmd.Level),
 			getTitle(cmd), watchParametersToStr(cmd.Parameters))
 	case "BREAK":
-		colorLog("[%s] BREAK:\n# %s #\n", levelToCmdFormat(cmd.Level),
-			cmd.Parameters["go.stack"])
+		if App.PrintStack {
+			colorLog("[%s] BREAK:\n# %s #", levelToCmdFormat(cmd.Level),
+				cmd.Parameters["go.stack"])
 
-		fmt.Print("press ENTER to view source...")
-		fmt.Scanln()
+			if !App.SkipSuspend {
+				if App.PrintSource {
+					fmt.Print("press ENTER to view source...")
+				} else {
+					fmt.Print("press ENTER to continue...")
+				}
+				fmt.Scanln()
+			}
+		} else {
+			colorLog("[%s] BREAK: 'print_stack' disenabled.\n",
+				levelToCmdFormat(cmd.Level))
+		}
 
-		line, _ := strconv.Atoi(cmd.Parameters["go.line"])
-		fmt.Println()
-		colorLog("[%s] Source( %s ):\n%s", levelToCmdFormat(cmd.Level),
-			cmd.Parameters["go.file"], getFileSource(cmd.Parameters["go.file"], line))
+		if App.PrintSource {
+			line, _ := strconv.Atoi(cmd.Parameters["go.line"])
+			fmt.Println()
+			colorLog("[%s] Source( %s ):\n%s", levelToCmdFormat(cmd.Level),
+				cmd.Parameters["go.file"], getFileSource(cmd.Parameters["go.file"], line))
 
-		fmt.Print("press ENTER to continue...")
-		fmt.Scanln()
+			if !App.SkipSuspend {
+				fmt.Print("press ENTER to continue...")
+				fmt.Scanln()
+			}
+		}
+
 	}
 }
 

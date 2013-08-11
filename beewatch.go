@@ -41,6 +41,9 @@ var App struct {
 	HttpPort     int    `json:"http_port"`
 	WatchEnabled bool   `json:"watch_enabled"`
 	CmdMode      bool   `json:"cmd_mode"`
+	SkipSuspend  bool   `json:"skip_suspend"`
+	PrintStack   bool   `json:"print_stack"`
+	PrintSource  bool   `json:"print_source"`
 }
 
 // Start initialize debugger data.
@@ -55,6 +58,8 @@ func Start(wl ...debugLevel) {
 	App.Name = "Bee Watch"
 	App.HttpPort = 23456
 	App.WatchEnabled = true
+	App.PrintStack = true
+	App.PrintSource = true
 
 	loadJSON()
 
