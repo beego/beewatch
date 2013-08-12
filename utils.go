@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	IMPORT_PATH = "github.com/beego/beewatch"
+	_IMPORT_PATH = "github.com/beego/beewatch"
 )
 
 // isExist returns if a file or directory exists
@@ -45,7 +45,7 @@ func getStaticPath() (string, error) {
 	}
 
 	for _, gp := range strings.Split(gps, sep) {
-		sp := gp + "/src/" + IMPORT_PATH + "/static"
+		sp := gp + "/src/" + _IMPORT_PATH + "/static"
 		if isExist(sp) {
 			return sp, nil
 		}
