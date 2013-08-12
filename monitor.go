@@ -122,10 +122,20 @@ func formatWatchVars() map[string]*watchVar {
 func reflectToStr(rv reflect.Value) string {
 	k := rv.Kind()
 	switch k {
+	case reflect.Bool:
+		return fmt.Sprintf("%v", rv.Bool())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return fmt.Sprintf("%v", rv.Int())
+	case reflect.Uint8, reflect.Uint16, reflect.Uint, reflect.Uint32, reflect.Uint64:
+		return fmt.Sprintf("%v", rv.Uint())
+	case reflect.Float32, reflect.Float64:
+		return fmt.Sprintf("%v", rv.Float())
+	case reflect.Complex64, reflect.Complex128:
+		return fmt.Sprintf("%v", rv.Complex())
 	case reflect.String:
 		return fmt.Sprintf("\"%s\"", rv.String())
-	case reflect.Bool:
-		return fmt.Sprintf("\"%v\"", rv.Bool())
+	case reflect.Invalid:
+		return "Invalid"
 	default:
 		return "Unknown"
 	}
