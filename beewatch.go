@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	APP_VER = "0.4.5.0811"
+	APP_VER = "0.5.0.0812"
 )
 
 type debugLevel int

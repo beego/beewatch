@@ -2,6 +2,7 @@ var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/
 var output;
 var ctrlPanel;
 var varMonitor;
+var varTable;
 var connected = false;
 var suspended = false;
 var websocket = new WebSocket(wsUri);
@@ -13,6 +14,7 @@ function init() {
     varMonitor = document.getElementById("variable_monitor");
     output.style.minHeight = (window.innerHeight - 200) + "px";
     varMonitor.style.height = (window.innerHeight - 220) + "px";
+    varTable = document.getElementById("var_table");
 
     setupWebSocket();
 }
@@ -79,6 +81,7 @@ function onMessage(evt) {
 
             addStack(logdiv, cmd);
             handleSourceUpdate(logdiv, cmd);
+            updateVarInfo(cmd);
             return;
     }
 }
@@ -214,7 +217,6 @@ function watchParametersToHtml(parameters) {
     return line
 }
 
-
 function handleSourceUpdate(logdiv, cmd) {
     loadSource(logdiv, cmd.Parameters["go.file"], cmd.Parameters["go.line"]);
 }
@@ -291,6 +293,44 @@ function space_padded(i) {
 
 function shortenFileName(fileName) {
     return fileName.length > 60 ? "..." + fileName.substring(fileName.length - 60) : fileName;
+}
+
+function updateVarInfo(cmd) {
+    for (var wv in cmd.WatchVars) {
+        var tr = findWatchVar(wv);
+        if (tr == null) {
+            tr = document.createElement("tr");
+            var td = document.createElement("td");
+            td.innerHTML = wv;
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.innerHTML = cmd.WatchVars[wv].Kind;
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.innerHTML = cmd.WatchVars[wv].Value;
+            tr.appendChild(td);
+
+            varTable.appendChild(tr);
+        } else {
+            var v = cmd.WatchVars[wv].Value;
+            if (v != tr.childNodes[2].innerHTML) {
+                tr.childNodes[2].innerHTML = v;
+                tr.className="text-error";
+            }
+        }
+    }
+}
+
+function findWatchVar(name) {
+    var trs = varTable.childNodes;
+    for (var i = 0; i < trs.length; i++) {
+        if (name == trs[i].childNodes[0].innerHTML) {
+            return trs[i];
+        }
+    }
+    return null;
 }
 
 function actionResume() {

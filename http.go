@@ -66,6 +66,7 @@ func listen() {
 	}
 }
 
+// Close sends disconnect signal to the browser.
 func Close() {
 	if App.WatchEnabled && !App.CmdMode {
 		channelExchangeCommands(LevelCritical, command{Action: "DONE"})
@@ -107,6 +108,7 @@ type command struct {
 	Action     string
 	Level      string
 	Parameters map[string]string
+	WatchVars  map[string]*watchVar
 }
 
 // addParam adds a key,value string pair to the command ; no check on overwrites.

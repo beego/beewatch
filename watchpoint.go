@@ -76,8 +76,10 @@ func (wp *WatchPoint) Display(nameValuePairs ...interface{}) *WatchPoint {
 		cmd.addParam("go.file", file)
 		cmd.addParam("go.line", fmt.Sprint(line))
 	}
-	if len(nameValuePairs)%2 == 0 {
-		for i := 0; i < len(nameValuePairs); i += 2 {
+
+	l := len(nameValuePairs)
+	if l%2 == 0 {
+		for i := 0; i < l; i += 2 {
 			k := nameValuePairs[i]
 			v := nameValuePairs[i+1]
 			cmd.addParam(fmt.Sprint(k), fmt.Sprintf("%#v", v))
@@ -121,6 +123,9 @@ func suspend(wp *WatchPoint, conditions ...bool) {
 		cmd.addParam("go.line", fmt.Sprint(line))
 		if App.PrintStack {
 			cmd.addParam("go.stack", trimStack(string(debug.Stack())))
+		}
+		if !App.CmdMode {
+			cmd.WatchVars = formatWatchVars()
 		}
 	}
 	channelExchangeCommands(wp.watchLevel, cmd)
