@@ -20,12 +20,12 @@ func main() {
 
 	// Add variables to be watched, must be even sized.
 	// Note that you have to pass the pointer.
-	// For now it only support basic types.
+	// For now, it only supports basic types.
 	// In this case, 'test' will not be watched.
 	beewatch.AddWatchVars("test", test, "App Name", &appName,
 		"bool", &boolean, "number", &number, "float", &floatNum)
 
-	// Display something.
+	// Display something, must be even sized.
 	beewatch.Info().Display("App Name", appName).Break().
 		Printf("boolean value is %v; number is %d", boolean, number)
 

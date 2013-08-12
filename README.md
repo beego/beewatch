@@ -45,7 +45,7 @@ Bee Watch is a "go get" able Go project, you can execute the following command t
 
 		// Add variables to be watched, must be even sized.
 		// Note that you have to pass the pointer.
-		// For now it only support basic types.
+		// For now it only supports basic types.
 		// In this case, 'test' will not be watched.
 		beewatch.AddWatchVars("test", test, "App Name", &appName,
 			"bool", &boolean, "number", &number, "float", &floatNum)
@@ -56,7 +56,7 @@ Bee Watch is a "go get" able Go project, you can execute the following command t
 
 		beewatch.Critical().Break().Display("float", floatNum)
 
-		// Change some values.
+		// Change some values, must be even sized.
 		appName = "Bee Watch2"
 		number = 250
 		// Here you will see something interesting.
@@ -88,7 +88,7 @@ Bee Watch debugger is automatically started on [http://localhost:23456](http://l
 
 You browser has to support WebSocket, it has been tested with Chrome, Safari and Firefox on Mac and Windows.
 
-![Bee Watch demo](tests/images/demo_beewatch.png?raw=true)
+![Bee Watch demo](https://github.com/beego/beewatch/blob/master/tests/images/demo_beewatch.png?raw=true)
 
 ## Credits
 
