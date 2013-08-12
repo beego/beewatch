@@ -34,6 +34,7 @@ const (
 
 var (
 	watchLevel debugLevel
+	isStarted  bool
 )
 
 var App struct {
@@ -48,6 +49,13 @@ var App struct {
 
 // Start initialize debugger data.
 func Start(wl ...debugLevel) {
+	if isStarted {
+		colorLog("[ERRO] Fail to start Bee Watch[ %s ]",
+			"cannot start Bee Watch twice")
+		return
+	}
+
+	isStarted = true
 	colorLog("[INIT] BW: Bee Watch v%s.\n", APP_VER)
 
 	watchLevel = LevelTrace
