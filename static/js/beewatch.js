@@ -152,7 +152,6 @@ function addStack(logdiv, cmd) {
 
 function addNonEmptyStackTo(stack, logdiv) {
     var toggle = document.createElement("a");
-    toggle.href = "#";
     toggle.className = "label label-primary";
     toggle.onclick = function () {
         toggleStack(toggle);
@@ -175,7 +174,7 @@ function toggleStack(link) {
     var stack = link.nextSibling;
     if (stack.style.display == "none") {
         link.innerHTML = "Stack & Source &#x25BC;";
-        stack.style.display = "block"
+        stack.style.display = "block";
     } else {
         link.innerHTML = "Stack & Source &#x25B6;";
         stack.style.display = "none";
