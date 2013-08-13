@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	APP_VER = "0.5.0.0812"
+	APP_VER = "0.5.0.0813"
 )
 
 type debugLevel int
@@ -77,17 +77,23 @@ func Start(wl ...debugLevel) {
 }
 
 func loadJSON() {
-	f, err := os.Open("beewatch.json")
+	wd, err := os.Getwd()
 	if err != nil {
-		colorLog("[ERRO] BW: Fail to load beewatch.json[ %s ]\n", err)
-		os.Exit(2)
+		colorLog("[ERRO] BW: Fail to get work directory[ %s ]\n", err)
+		return
+	}
+
+	f, err := os.Open(wd + "/beewatch.json")
+	if err != nil {
+		colorLog("[WARN] BW: Fail to load beewatch.json[ %s ]\n", err)
+		return
 	}
 	defer f.Close()
 
 	d := json.NewDecoder(f)
 	err = d.Decode(&App)
 	if err != nil {
-		colorLog("[ERRO] BW: Fail to parse beewatch.json[ %s ]\n", err)
+		colorLog("[WARN] BW: Fail to parse beewatch.json[ %s ]\n", err)
 		os.Exit(2)
 	}
 }
