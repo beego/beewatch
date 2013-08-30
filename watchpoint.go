@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/Unknwon/com"
 )
 
 var debuggerMutex = sync.Mutex{}
@@ -85,7 +87,7 @@ func (wp *WatchPoint) Display(nameValuePairs ...interface{}) *WatchPoint {
 			cmd.addParam(fmt.Sprint(k), fmt.Sprintf("%#v", v))
 		}
 	} else {
-		fmt.Printf("[WARN] BW: Missing variable for Display(...) in: %v:%v.\n", file, line)
+		com.ColorLog("[WARN] BW: Missing variable for Display(...) in: %v:%v.\n", file, line)
 		wp.disabled = true
 		return wp
 	}
@@ -206,38 +208,33 @@ func channelExchangeCommands(wl debugLevel, toCmd command) {
 func cmdExchange(cmd command) {
 	switch cmd.Action {
 	case "PRINT", "DISPLAY":
-		colorLog("[%s] DEBUG( %s ) --> %s\n", levelToCmdFormat(cmd.Level),
+		com.ColorLog("[%s] DEBUG( %s ) --> %s\n", levelToCmdFormat(cmd.Level),
 			getTitle(cmd), watchParametersToStr(cmd.Parameters))
 	case "BREAK":
 		if App.PrintStack {
-			colorLog("[%s] BREAK:\n# %s #", levelToCmdFormat(cmd.Level),
+			com.ColorLog("[%s] BREAK:\n# %s #", levelToCmdFormat(cmd.Level),
 				cmd.Parameters["go.stack"])
 
-			if !App.SkipSuspend {
-				if App.PrintSource {
-					fmt.Print("press ENTER to view source...")
-				} else {
-					fmt.Print("press ENTER to continue...")
-				}
+			if !App.SkipSuspend && App.PrintSource {
+				fmt.Print("press ENTER to view source...")
 				fmt.Scanln()
 			}
 		} else {
-			colorLog("[%s] BREAK: 'print_stack' disenabled.\n",
+			com.ColorLog("[%s] BREAK: 'print_stack' disenabled.\n",
 				levelToCmdFormat(cmd.Level))
 		}
 
 		if App.PrintSource {
 			line, _ := strconv.Atoi(cmd.Parameters["go.line"])
 			fmt.Println()
-			colorLog("[%s] Source( %s ):\n%s", levelToCmdFormat(cmd.Level),
+			com.ColorLog("[%s] Source( %s ):\n%s", levelToCmdFormat(cmd.Level),
 				cmd.Parameters["go.file"], getFileSource(cmd.Parameters["go.file"], line))
-
-			if !App.SkipSuspend {
-				fmt.Print("press ENTER to continue...")
-				fmt.Scanln()
-			}
 		}
 
+		if !App.SkipSuspend {
+			fmt.Print("press ENTER to continue...")
+			fmt.Scanln()
+		}
 	}
 }
 

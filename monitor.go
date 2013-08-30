@@ -105,6 +105,10 @@ type watchVar struct {
 }
 
 func formatWatchVars() map[string]*watchVar {
+	if watchLock == nil {
+		return nil
+	}
+
 	watchLock.RLock()
 	defer watchLock.RUnlock()
 

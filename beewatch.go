@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	APP_VER = "0.5.1.0829"
+	APP_VER = "0.5.2.0830"
 )
 
 type debugLevel int
@@ -45,6 +45,28 @@ var App struct {
 	SkipSuspend  bool   `json:"skip_suspend"`
 	PrintStack   bool   `json:"print_stack"`
 	PrintSource  bool   `json:"print_source"`
+}
+
+func loadJSON() {
+	wd, err := os.Getwd()
+	if err != nil {
+		colorLog("[ERRO] BW: Fail to get work directory[ %s ]\n", err)
+		return
+	}
+
+	f, err := os.Open(wd + "/beewatch.json")
+	if err != nil {
+		colorLog("[WARN] BW: Fail to load beewatch.json[ %s ]\n", err)
+		return
+	}
+	defer f.Close()
+
+	d := json.NewDecoder(f)
+	err = d.Decode(&App)
+	if err != nil {
+		colorLog("[WARN] BW: Fail to parse beewatch.json[ %s ]\n", err)
+		os.Exit(2)
+	}
 }
 
 // Start initialize debugger data.
@@ -71,29 +93,11 @@ func Start(wl ...debugLevel) {
 
 	loadJSON()
 
-	if App.WatchEnabled && !App.CmdMode {
-		initHTTP()
-	}
-}
+	if App.WatchEnabled {
+		if App.CmdMode {
 
-func loadJSON() {
-	wd, err := os.Getwd()
-	if err != nil {
-		colorLog("[ERRO] BW: Fail to get work directory[ %s ]\n", err)
-		return
-	}
-
-	f, err := os.Open(wd + "/beewatch.json")
-	if err != nil {
-		colorLog("[WARN] BW: Fail to load beewatch.json[ %s ]\n", err)
-		return
-	}
-	defer f.Close()
-
-	d := json.NewDecoder(f)
-	err = d.Decode(&App)
-	if err != nil {
-		colorLog("[WARN] BW: Fail to parse beewatch.json[ %s ]\n", err)
-		os.Exit(2)
+		} else {
+			initHTTP()
+		}
 	}
 }
